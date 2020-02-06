@@ -1,0 +1,68 @@
+For this guide, we will assume that you have a basic server based on Ubuntu running. Before Laravel, we need to install other components that are essential.
+
+Installing PHP 7.1
+Next step is to install PHP along with several extra packages that would prove useful if you are going to work with Laravel. 
+
+sudo add-apt-repository ppa:ondrej/php
+sudo apt-get update
+sudo apt-get install php7.1 php7.1-mcrypt php7.1-xml php7.1-gd php7.1-opcache php7.1-mbstring
+Even though Ubuntu's own repository has PHP, it's better to add a 3rd party repository here because it gets more frequently updated. You can skip that step and stick to Ubuntu's version if that's what you prefer.
+
+Installing Apache
+It's time to install Apache server now. We would also need to install libapache2-mod-php7.1 package to hook up Apache with PHP.
+
+sudo apt-get install apache2 libapache2-mod-php7.1
+Installing Laravel
+Before we finally delve into it, we also need Git version control to be installed. If you have it installed, you can skip the following step. If you don't have, then you can follow our guide to set it up first.
+
+To install Laravel, we need to install Composer first. It is a tool for dependency management in PHP that allows you to package all the required libraries associated with a package as one. To install Laravel and all its dependencies, Composer is required. It will download and install everything that is required to run Laravel framework. To install Composer, issue the following commands.
+
+cd /tmp
+curl -sS https://getcomposer.org/installer | php
+sudo mv composer.phar /usr/local/bin/composer
+The curl command downloads composer.phar package to your /tmp directory. But we would want composer to run globally hence we need to move it to /usr/local/bin directory under the name 'composer'. Now we can run composer from anywhere.
+
+
+ 
+To install Laravel, move to the public html directory on your system. Since we are on Ubuntu and using Apache, we will install it in the /var/www/html directory.
+
+cd /var/www/html
+sudo composer create-project laravel/laravel your-project --prefer-dist
+The above command will create a "your-project" directory with Laravel installation in it. Composer uses git to download and install all the packages and modules that Laravel requires for functioning.
+
+Configuring Apache
+Now that we have installed Laravel, we move on to the step of configuring Apache web server.
+
+Next step is to give proper permissions to the project directory. For this, we need to enable access to it from the www-data group and to give it writing permissions to the storage directory.
+
+sudo chgrp -R www-data /var/www/html/your-project
+sudo chmod -R 775 /var/www/html/your-project/storage
+Now go to the /etc/apache2/sites-available directory and use the following command to create a configuration file for our laravel install.
+
+cd /etc/apache2/sites-available
+sudo nano laravel.conf
+
+ 
+Now add the following content to the file and close it after saving. Replace yourdomain.tld with the domain name of your website inside the file.
+
+<VirtualHost *:80>
+    ServerName yourdomain.tld
+
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html/your-project/public
+
+    <Directory /var/www/html/your-project>
+        AllowOverride All
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+Now we have to enable this newly created .conf file and disable the default .conf file that is installed with the default Apache install. Also, we need to enable mod_rewrite so that permalinks can function properly.
+
+sudo a2dissite 000-default.conf
+sudo a2ensite laravel.conf
+sudo a2enmod rewrite
+sudo service apache2 restart
+Your Laravel installation is now complete. Visit the IP address or domain name of your server with a web browser (in my case http://192.168.1.100). You will see the Laravel default page.
+
